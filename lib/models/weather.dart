@@ -10,7 +10,7 @@ class Weather {
   String? location;
   double? longitude;
   double? latitude;
-  String? iconPath;
+  String? icon;
   DateTime? time;
   int? rainyPercent;
 
@@ -18,6 +18,6 @@ class Weather {
   Weather({
     this.temperature, this.temperatureMax, this.temperatureMin, this.description,
     this.location, this.longitude, this.latitude,
-    this.iconPath, this.time, this.rainyPercent,
+    this.icon, this.time, this.rainyPercent,
   });
 }
