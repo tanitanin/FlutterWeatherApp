@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:weatherapp/models/weather.dart';
+import 'package:weatherapp/models/zipcode.dart';
+import 'package:weatherapp/repositries/zipcode/zip_cloud.dart';
+import 'package:weatherapp/ui/component/weather_current.dart';
 import 'package:weatherapp/ui/component/weather_daily.dart';
 import 'package:weatherapp/ui/component/weather_hourly.dart';
 
@@ -57,62 +60,6 @@ class _MyHomePageState extends State<MyHomePage> {
       rainyPercent: 100,
       time: DateTime(2023, 1, 2, 15),
     ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
   ];
   List<Weather> dailyWeather = [
     Weather(
@@ -158,102 +105,65 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: SafeArea(
-        child: Center(
-          child: Column(
-            children: <Widget>[
-              // todo show current weather from API
-              // todo show hourly weather forecast from API
-              // todo show daily weather forecast from API
-              SafeArea(
+        child: Column(
+          children: <Widget>[
+            // todo show current weather from API
+            // todo show hourly weather forecast from API
+            // todo show daily weather forecast from API
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: InputDecoration(
+                  labelText: 'Zip/Postal Code',
+                  hintText: 'Input Zip/Postal Code',
+                  errorText: (textIsValid ? null : 'Invalid Zip/Postal Code'),
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (value) async {
+                  bool isValid = ZipCode.isValid(value);
+                  setState(() { textIsValid = isValid; });
+                },
+                onSubmitted: (value) async {
+                  bool isValid = ZipCode.isValid(value);
+                  if (isValid) {
+                    print('SearchAddressFromZipCode');
+                    String zipCode = ZipCode.getWithoutHyphen(value);
+                    String? address = await ZipCodeApi.searchAddressFromZipCode(zipCode);
+                    setState(() {
+                      currentWeather.location = address;
+                    });
+                  }
+                },
+              ),
+            ),
+            CurrentWeatherWidget(weather: currentWeather),
+            const Divider(height: 0),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
+              child: Row(
+                children: hourlyWeather
+                    .map((w) => HourlyWeatherWidget(weather: w))
+                    .toList(),
+              ),
+            ),
+            const Divider(height: 0),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    maxLength: 8,
-                    decoration: InputDecoration(
-                      labelText: 'Zip/Postal Code',
-                      hintText: 'Input Zip/Postal Code',
-                      errorText: (textIsValid ? null : 'Invalid Zip/Postal Code'),
-                      border: const OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      bool isValid = RegExp(
-                          r"^[0-9]{3}[\-]{0,1}[0-9]{4}$",
-                          caseSensitive: false).hasMatch(value);
-                      setState(() { textIsValid = isValid; });
-                    },
-                    onSubmitted: (value) {
-                      print(value);
-                    },
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: Column(
+                    children: dailyWeather
+                        .map((w) => DailyWeatherWidget(weather: w))
+                        .toList(),
                   ),
                 ),
               ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 50.0),
-                  child: Column(children: <Widget>[
-                    Text(
-                      '${currentWeather.location}',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      '${currentWeather.description}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    Text(
-                      '${currentWeather.temperature}℃',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Max:${currentWeather.temperatureMax}℃',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          'Min:${currentWeather.temperatureMin}℃',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ]),
-                ),
-              ),
-              const Divider(height: 0),
-              SafeArea(
-                child: Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: hourlyWeather
-                            .map((w) => HourlyWeatherWidget(weather: w))
-                            .toList(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const Divider(height: 0),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: Column(
-                      children: dailyWeather
-                          .map((w) => DailyWeatherWidget(weather: w))
-                          .toList(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
