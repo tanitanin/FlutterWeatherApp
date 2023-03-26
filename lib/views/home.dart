@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:weatherapp/models/weather.dart';
 import 'package:weatherapp/ui/component/weather_daily.dart';
 import 'package:weatherapp/ui/component/weather_hourly.dart';
@@ -147,6 +148,8 @@ class _MyHomePageState extends State<MyHomePage> {
       temperatureMin: 0,
     ),
   ];
+  final TextEditingController controller = TextEditingController();
+  bool textIsValid = false;
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +164,31 @@ class _MyHomePageState extends State<MyHomePage> {
               // todo show current weather from API
               // todo show hourly weather forecast from API
               // todo show daily weather forecast from API
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    maxLength: 8,
+                    decoration: InputDecoration(
+                      labelText: 'Zip/Postal Code',
+                      hintText: 'Input Zip/Postal Code',
+                      errorText: (textIsValid ? null : 'Invalid Zip/Postal Code'),
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      bool isValid = RegExp(
+                          r"^[0-9]{3}[\-]{0,1}[0-9]{4}$",
+                          caseSensitive: false).hasMatch(value);
+                      setState(() { textIsValid = isValid; });
+                    },
+                    onSubmitted: (value) {
+                      print(value);
+                    },
+                  ),
+                ),
+              ),
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 50.0),
