@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:weatherapp/models/weather.dart';
 import 'package:weatherapp/models/zipcode.dart';
-import 'package:weatherapp/repositries/zipcode/zip_cloud.dart';
+import 'package:weatherapp/repositries/zipcloud.dart';
 import 'package:weatherapp/ui/component/weather_current.dart';
 import 'package:weatherapp/ui/component/weather_daily.dart';
 import 'package:weatherapp/ui/component/weather_hourly.dart';
@@ -17,13 +16,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Weather currentWeather = Weather(
-    temperature: 10,
-    description: '晴れ',
-    temperatureMax: 20,
-    temperatureMin: 5,
-    location: '東京',
-  );
+  Weather? currentWeather;
   List<Weather> hourlyWeather = [
     Weather(
       temperature: 20,
@@ -97,6 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
   final TextEditingController controller = TextEditingController();
   bool textIsValid = false;
+  String? invalidZipCodeErrorMessage = 'Invalid Zip/Postal Code';
 
   @override
   Widget build(BuildContext context) {
@@ -119,22 +113,49 @@ class _MyHomePageState extends State<MyHomePage> {
                 decoration: InputDecoration(
                   labelText: 'Zip/Postal Code',
                   hintText: 'Input Zip/Postal Code',
-                  errorText: (textIsValid ? null : 'Invalid Zip/Postal Code'),
+                  errorText: (textIsValid ? null : invalidZipCodeErrorMessage),
                   border: const OutlineInputBorder(),
                 ),
                 onChanged: (value) async {
                   bool isValid = ZipCode.isValid(value);
-                  setState(() { textIsValid = isValid; });
+                  String? errorMessage =
+                      isValid ? null : 'Invalid Zip/Postal Code';
+                  setState(() {
+                    textIsValid = isValid;
+                    invalidZipCodeErrorMessage = errorMessage;
+                  });
                 },
                 onSubmitted: (value) async {
                   bool isValid = ZipCode.isValid(value);
                   if (isValid) {
                     print('SearchAddressFromZipCode');
                     String zipCode = ZipCode.getWithoutHyphen(value);
-                    String? address = await ZipCodeApi.searchAddressFromZipCode(zipCode);
-                    setState(() {
-                      currentWeather.location = address;
-                    });
+                    String? address =
+                        await ZipCodeApi.searchAddressFromZipCode(zipCode);
+                    if (address == null) {
+                      String? errorMessage =
+                          'No such location of this zip/postal Code.';
+                      setState(() {
+                        textIsValid = false;
+                        invalidZipCodeErrorMessage = errorMessage;
+                      });
+                    } else {
+                      setState(() {
+                        textIsValid = true;
+                      });
+                      Weather? current =
+                          await Weather.getCurrentWeather(zipCode);
+                      if (current != null) {
+                        setState(() {
+                          currentWeather = current;
+                          currentWeather?.location = address;
+                        });
+                      } else {
+                        setState(() {
+                          currentWeather = null;
+                        });
+                      }
+                    }
                   }
                 },
               ),

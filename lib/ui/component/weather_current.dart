@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:weatherapp/models/weather.dart';
 
 class CurrentWeatherWidget extends StatelessWidget {
-  final Weather weather;
+  final Weather? weather;
 
   const CurrentWeatherWidget({
     Key? key,
@@ -15,26 +15,26 @@ class CurrentWeatherWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 50.0),
       child: Column(children: <Widget>[
         Text(
-          '${weather.location}',
+          weather?.location ?? '-',
           style: Theme.of(context).textTheme.titleLarge,
         ),
         Text(
-          '${weather.description}',
+          weather?.description ?? '-',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         Text(
-          '${weather.temperature}℃',
+          '${weather?.temperature ?? '-'}℃',
           style: Theme.of(context).textTheme.headlineLarge,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Max:${weather.temperatureMax}℃',
+              'Max:${weather?.temperatureMax ?? '-'}℃',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(
-              'Min:${weather.temperatureMin}℃',
+              'Min:${weather?.temperatureMin ?? '-'}℃',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -42,5 +42,4 @@ class CurrentWeatherWidget extends StatelessWidget {
       ]),
     );
   }
-
 }

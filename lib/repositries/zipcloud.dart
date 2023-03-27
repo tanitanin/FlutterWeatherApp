@@ -11,10 +11,10 @@ class ZipCodeApi {
     try {
       var response = await get(Uri.parse(uri));
       Map<String, dynamic> data = jsonDecode(response.body);
-      String address = data['results'][0]['address1'];
-      return address;
-    }
-    catch(e) {
+      //String address1 = data['results'][0]['address1'];
+      String address2 = data['results'][0]['address2'];
+      return address2;
+    } catch (e) {
       print(e);
       return null;
     }
