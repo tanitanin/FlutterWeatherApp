@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart';
 
@@ -6,6 +7,7 @@ class OpenWeatherApi {
   static String baseZipToGeoUri = 'http://api.openweathermap.org/geo/1.0/zip';
   static String baseOneCallUri =
       'https://api.openweathermap.org/data/3.0/onecall';
+  static String baseIconUri = 'https://openweathermap.org/img/wn/';
 
   static Future<ZipCodeCoordinates?> getCoordinateFromZipCode(
       String zipCode) async {
@@ -39,7 +41,8 @@ class OpenWeatherApi {
       double latitude, double longitude) async {
     try {
       String apiKey = dotenv.get('OEPNWEATHER_API_KEY');
-      String excludeParts = 'minutely,hourly,daily,alerts';
+      //String excludeParts = 'minutely,hourly,daily,alerts';
+      String excludeParts = 'minutely,alerts';
       String uri =
           '$baseOneCallUri?lat=$latitude&lon=$longitude&exclude=$excludeParts&appid=$apiKey&lang=ja&units=metric';
 
@@ -64,6 +67,15 @@ class OpenWeatherApi {
       print(e);
       return null;
     }
+  }
+
+  static String getIconImageUri(String iconId) {
+    String iconFileName = '$iconId.png';
+    if (iconId.isEmpty) {
+      iconFileName = '01d.png';
+    }
+    String uri = '$baseIconUri/$iconFileName';
+    return uri;
   }
 }
 
@@ -279,7 +291,10 @@ class Daily {
     required this.windSpeed,
     required this.windDeg,
     required this.weather,
+    required this.clouds,
     required this.pop,
+    required this.rain,
+    required this.snow,
     required this.uvi,
   });
 
@@ -294,7 +309,10 @@ class Daily {
   double windSpeed;
   int windDeg;
   List<Weather> weather;
+  int clouds;
   double pop;
+  double? rain;
+  double? snow;
   double uvi;
 
   factory Daily.fromJson(Map<String, dynamic> json) => Daily(
@@ -310,7 +328,10 @@ class Daily {
         windDeg: json["wind_deg"],
         weather:
             List<Weather>.from(json["weather"].map((x) => Weather.fromJson(x))),
+        clouds: json["clouds"],
         pop: json["pop"].toDouble(),
+        rain: json["rain"]?.toDouble(),
+        snow: json["snow"]?.toDouble(),
         uvi: json["uvi"].toDouble(),
       );
 
@@ -326,7 +347,9 @@ class Daily {
         "wind_speed": windSpeed,
         "wind_deg": windDeg,
         "weather": List<dynamic>.from(weather.map((x) => x.toJson())),
+        "clouds": clouds,
         "pop": pop,
+        "rain": rain,
         "uvi": uvi,
       };
 }

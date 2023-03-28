@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:weatherapp/models/weather.dart';
+import 'package:weatherapp/repositries/openweather.dart';
 
 class HourlyWeatherWidget extends StatelessWidget {
-  final Weather weather;
+  final WeatherInformation weather;
 
   const HourlyWeatherWidget({
     Key? key,
@@ -24,10 +25,16 @@ class HourlyWeatherWidget extends StatelessWidget {
               '☂ ${weather.rainyPercent}%',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            Text(
-              weather.icon ?? '☀',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            (weather.iconUri != null)
+                ? SizedBox(
+                    height: 32,
+                    child: Image.network(
+                        OpenWeatherApi.getIconImageUri(weather.iconUri!)),
+                  )
+                : Text(
+                    '☀',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
             Text(
               '${weather.temperature}℃',
               style: Theme.of(context).textTheme.bodyMedium,

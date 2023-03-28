@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:weatherapp/models/weather.dart';
 
 class CurrentWeatherWidget extends StatelessWidget {
-  final Weather? weather;
+  final WeatherInformation? weather;
 
   const CurrentWeatherWidget({
     Key? key,

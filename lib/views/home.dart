@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:weatherapp/models/weather.dart';
 import 'package:weatherapp/models/zipcode.dart';
+import 'package:weatherapp/repositries/openweather.dart';
 import 'package:weatherapp/repositries/zipcloud.dart';
 import 'package:weatherapp/ui/component/weather_current.dart';
 import 'package:weatherapp/ui/component/weather_daily.dart';
@@ -16,81 +17,66 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Weather? currentWeather;
-  List<Weather> hourlyWeather = [
-    Weather(
-      temperature: 20,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 0,
-      time: DateTime(2023, 1, 2, 10),
-    ),
-    Weather(
-      temperature: -5,
-      description: '雪',
-      icon: '☃',
-      rainyPercent: 30,
-      time: DateTime(2023, 1, 2, 11),
-    ),
-    Weather(
-      temperature: 15,
-      description: 'くもり',
-      icon: '☁',
-      rainyPercent: 50,
-      time: DateTime(2023, 1, 2, 12),
-    ),
-    Weather(
-      temperature: 30,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 13),
-    ),
-    Weather(
-      temperature: 40,
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 2, 15),
-    ),
-  ];
-  List<Weather> dailyWeather = [
-    Weather(
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 0,
-      time: DateTime(2023, 1, 2),
-      temperatureMax: 30,
-      temperatureMin: 20,
-    ),
-    Weather(
-      description: 'くもり',
-      icon: '☁',
-      rainyPercent: 30,
-      time: DateTime(2023, 1, 3),
-      temperatureMax: 15,
-      temperatureMin: 10,
-    ),
-    Weather(
-      description: '雪',
-      icon: '☃',
-      rainyPercent: 100,
-      time: DateTime(2023, 1, 4),
-      temperatureMax: -10,
-      temperatureMin: 5,
-    ),
-    Weather(
-      description: '晴れ',
-      icon: '☀',
-      rainyPercent: 0,
-      time: DateTime(2023, 1, 5),
-      temperatureMax: 100,
-      temperatureMin: 0,
-    ),
-  ];
+  WeatherInformation? currentWeather;
+  List<WeatherInformation> hourlyWeather = [];
+  List<WeatherInformation> dailyWeather = [];
   final TextEditingController controller = TextEditingController();
   bool textIsValid = false;
   String? invalidZipCodeErrorMessage = 'Invalid Zip/Postal Code';
+
+  Future updateZipCodeState(String zipCode) async {
+    bool isValid = ZipCode.isValid(zipCode);
+    String? errorMessage = isValid ? null : 'Invalid Zip/Postal Code';
+    setState(() {
+      textIsValid = isValid;
+      invalidZipCodeErrorMessage = errorMessage;
+    });
+  }
+
+  Future fetchAllWeatherInformation(String zipCode) async {
+    bool isValid = ZipCode.isValid(zipCode);
+    if (!isValid) {
+      return;
+    }
+
+    print('SearchAddressFromZipCode');
+    String zipCodeWithoutHyphen = ZipCode.getWithoutHyphen(zipCode);
+    String? address =
+        await ZipCodeApi.searchAddressFromZipCode(zipCodeWithoutHyphen);
+    if (address == null) {
+      String? errorMessage = 'No such location of this zip/postal Code.';
+      setState(() {
+        textIsValid = false;
+        invalidZipCodeErrorMessage = errorMessage;
+      });
+      return;
+    }
+
+    WeatherData? data = await WeatherInformation.getWeatherData(zipCode);
+    if (data == null) {
+      setState(() {
+        textIsValid = false;
+      });
+      return;
+    }
+
+    WeatherForecast forecast = WeatherForecast.FromWeatherData(data);
+    WeatherInformation? current = forecast.current;
+    if (current != null) {
+      setState(() {
+        currentWeather = current;
+        currentWeather?.location = address;
+        hourlyWeather = forecast.hourly;
+        dailyWeather = forecast.daily;
+      });
+    } else {
+      setState(() {
+        currentWeather = null;
+        hourlyWeather = [];
+        dailyWeather = [];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,46 +103,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   border: const OutlineInputBorder(),
                 ),
                 onChanged: (value) async {
-                  bool isValid = ZipCode.isValid(value);
-                  String? errorMessage =
-                      isValid ? null : 'Invalid Zip/Postal Code';
-                  setState(() {
-                    textIsValid = isValid;
-                    invalidZipCodeErrorMessage = errorMessage;
-                  });
+                  await updateZipCodeState(value);
                 },
                 onSubmitted: (value) async {
-                  bool isValid = ZipCode.isValid(value);
-                  if (isValid) {
-                    print('SearchAddressFromZipCode');
-                    String zipCode = ZipCode.getWithoutHyphen(value);
-                    String? address =
-                        await ZipCodeApi.searchAddressFromZipCode(zipCode);
-                    if (address == null) {
-                      String? errorMessage =
-                          'No such location of this zip/postal Code.';
-                      setState(() {
-                        textIsValid = false;
-                        invalidZipCodeErrorMessage = errorMessage;
-                      });
-                    } else {
-                      setState(() {
-                        textIsValid = true;
-                      });
-                      Weather? current =
-                          await Weather.getCurrentWeather(zipCode);
-                      if (current != null) {
-                        setState(() {
-                          currentWeather = current;
-                          currentWeather?.location = address;
-                        });
-                      } else {
-                        setState(() {
-                          currentWeather = null;
-                        });
-                      }
-                    }
-                  }
+                  await fetchAllWeatherInformation(value);
                 },
               ),
             ),
