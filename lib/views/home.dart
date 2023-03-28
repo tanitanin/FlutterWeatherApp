@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:weatherapp/models/weather.dart';
 import 'package:weatherapp/models/zipcode.dart';
 import 'package:weatherapp/repositries/openweather.dart';
+import 'package:weatherapp/repositries/user_settings.dart';
 import 'package:weatherapp/repositries/zipcloud.dart';
 import 'package:weatherapp/ui/component/weather_current.dart';
 import 'package:weatherapp/ui/component/weather_daily.dart';
@@ -52,6 +54,9 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
+    UserSettings userSettings = await UserSettings.getInstance();
+    userSettings.setZipCode(zipCodeWithoutHyphen);
+
     WeatherData? data = await WeatherInformation.getWeatherData(zipCode);
     if (data == null) {
       setState(() {
@@ -76,6 +81,21 @@ class _MyHomePageState extends State<MyHomePage> {
         dailyWeather = [];
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future(() async {
+      UserSettings userSettings = await UserSettings.getInstance();
+      String? zipCode = userSettings.getZipCode();
+      if (zipCode != null) {
+        controller.text = zipCode;
+        await updateZipCodeState(zipCode);
+        await fetchAllWeatherInformation(zipCode);
+      }
+      setState(() {});
+    });
   }
 
   @override

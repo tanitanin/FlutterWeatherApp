@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:weatherapp/repositries/user_settings.dart';
 import 'views/home.dart';
 
 class MyApp extends StatelessWidget {
