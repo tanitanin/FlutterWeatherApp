@@ -52,17 +52,18 @@ class WeatherInformation {
 
   static Future<WeatherInformation?> getCurrentWeather(String zipCode) async {
     try {
-      WeatherData? weatherData = await WeatherInformation.getWeatherData(zipCode);
+      WeatherData? weatherData =
+          await WeatherInformation.getWeatherData(zipCode);
       if (weatherData != null && weatherData.current != null) {
         return WeatherInformation(
           time: DateTime.fromMillisecondsSinceEpoch(
-            (weatherData.current?.dt ?? 0) +
-                (weatherData.timezoneOffset ?? 0),
+            (weatherData.current?.dt ?? 0) + (weatherData.timezoneOffset ?? 0),
             isUtc: true,
           ),
           temperature: weatherData.current?.temp,
           rainyPercent: weatherData.current?.clouds,
-          iconUri: OpenWeatherApi.getIconImageUri(weatherData.current?.weather[0].icon ?? ''),
+          iconUri: OpenWeatherApi.getIconImageUri(
+              weatherData.current?.weather[0].icon ?? ''),
           description: weatherData.current?.weather[0].description,
         );
       }
